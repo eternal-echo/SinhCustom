@@ -4,10 +4,20 @@
 
 
 namespace optiling {
+constexpr int32_t BLOCK_DIM = 8;
+constexpr int32_t TILE_NUM = 16;
 static ge::graphStatus TilingFunc(gert::TilingContext* context)
 {
     SinhCustomTilingData tiling;
-    //考生自行填充
+    uint32_t total_len = context->GetInputShape(0)->GetOriginShape().GetShapeSize();
+    context->SetBlockDim(BLOCK_DIM);
+    tiling.set_total_len(total_len);
+    tiling.set_tile_num(TILE_NUM);
+    tiling.SaveToBuffer(context->GetRawTilingData()->GetData(), context->GetRawTilingData()->GetCapacity());
+    context->GetRawTilingData()->SetDataSize(tiling.GetDataSize());
+    size_t *currentWorkspace = context->GetWorkspaceSizes(1);
+    currentWorkspace[0] = 0;
+    return ge::GRAPH_SUCCESS;
 }
 }
 
@@ -43,7 +53,7 @@ public:
 
         this->AICore()
             .SetTiling(optiling::TilingFunc);
-        this->AICore().AddConfig("ascend310b");
+        this->AICore().AddConfig("ascend910b");
     }
 };
 
